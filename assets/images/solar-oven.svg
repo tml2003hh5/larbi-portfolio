@@ -1,18 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-<defs>
-  <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071426"/><stop offset="1" stop-color="#133b5f"/></linearGradient>
-  <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffd34d"/><stop offset="1" stop-color="#ff8a00"/></linearGradient>
-</defs>
-<rect width="1200" height="800" fill="url(#g)"/>
-<circle cx="920" cy="170" r="90" fill="url(#sun)"/>
-<g stroke="#ffbd2e" stroke-width="10" opacity=".9">
-<line x1="920" y1="30" x2="920" y2="0"/><line x1="920" y1="340" x2="920" y2="380"/>
-<line x1="780" y1="170" x2="730" y2="170"/><line x1="1060" y1="170" x2="1110" y2="170"/>
-</g>
-<path d="M250 610 L420 345 L825 345 L970 610 Z" fill="#d6e9f8" stroke="#65c7ff" stroke-width="14"/>
-<path d="M420 345 L505 220 L745 220 L825 345 Z" fill="#d9f2ff" stroke="#65c7ff" stroke-width="12"/>
-<path d="M292 575 L455 380 L790 380 L925 575 Z" fill="#102b43" stroke="#89dcff" stroke-width="9"/>
-<path d="M455 380 L505 245 L745 245 L790 380 Z" fill="#eefbff" opacity=".55"/>
-<text x="80" y="110" fill="#fff" font-family="Arial" font-size="58" font-weight="700">SOLAR OVEN</text>
-<text x="84" y="168" fill="#65c7ff" font-family="Arial" font-size="29">Thermal Energy • Sustainable Design</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#041222"/><stop offset="1" stop-color="#12395d"/></linearGradient><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffdb5c"/><stop offset="1" stop-color="#ff8600"/></linearGradient></defs><rect width="1200" height="800" fill="url(#b)"/><circle cx="930" cy="155" r="84" fill="url(#s)"/><g stroke="#ffbf36" stroke-width="9"><path d="M930 28v-25M930 307v38M803 155h-43M1057 155h43M840 65l-31-31M1020 65l31-31"/></g><path d="M245 625 432 340h385l155 285Z" fill="#d8f1ff" stroke="#54c9ff" stroke-width="14"/><path d="m432 340 85-122h220l80 122Z" fill="#e8f8ff" stroke="#54c9ff" stroke-width="12"/><path d="m300 582 165-205h320l135 205Z" fill="#0a2942" stroke="#9be7ff" stroke-width="9"/><text x="70" y="105" fill="#fff" font-family="Arial" font-size="60" font-weight="700">SOLAR OVEN</text><text x="75" y="160" fill="#62d4ff" font-family="Arial" font-size="28">Thermal Energy • Sustainable Design</text></svg>
