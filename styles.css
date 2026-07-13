@@ -18,3 +18,23 @@ a{color:inherit;text-decoration:none}img{display:block;max-width:100%}button,inp
 @media(max-width:1040px){.projects-grid,.skills-grid,.cards-grid{grid-template-columns:repeat(2,1fr)}.tech-strip{grid-template-columns:repeat(3,1fr)}.hero-grid{grid-template-columns:1fr 1fr}.portrait-shell{width:min(390px,88vw)}}
 @media(max-width:790px){.nav-links{display:none;position:absolute;top:76px;right:17px;left:17px;padding:16px;flex-direction:column;background:#061528;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.nav-links.open{display:flex}.menu-btn{display:grid}.theme-dot{display:none}.hero{padding-top:36px}.hero-grid{grid-template-columns:1fr;grid-template-areas:"visual" "copy";gap:24px}.hero-copy{text-align:center}.hero-copy p{margin-left:auto;margin-right:auto}.actions,.socials{justify-content:center}.portrait-shell{width:min(350px,83vw)}.hero::after{left:-260px;top:220px;opacity:.35}.tech-strip{grid-template-columns:repeat(2,1fr)}.page-hero-grid,.project-hero-grid,.project-content{grid-template-columns:1fr}.page-hero-copy,.project-detail{text-align:center}.project-detail .tags{justify-content:center}.stats-grid{grid-template-columns:repeat(2,1fr)}.gallery-grid{grid-template-columns:repeat(2,1fr)}.cta{flex-direction:column;text-align:center}}
 @media(max-width:540px){.container{width:min(100% - 22px,var(--max))}.nav{height:66px}.brand{font-size:18px}.brand img{width:30px}.nav-links{top:66px}.hero h1{font-size:38px}.hero p{font-size:14px;line-height:1.95}.portrait-shell{width:min(318px,88vw)}.tech-strip,.projects-grid,.skills-grid,.cards-grid,.stats-grid,.gallery-grid{grid-template-columns:1fr}.tech-chip{grid-template-columns:42px 1fr;text-align:right}.section{padding:58px 0}.section-title h2{font-size:30px}.timeline-item{grid-template-columns:1fr;gap:6px}.project-gallery{grid-template-columns:1fr}.cta{padding:24px}.btn{width:100%}.actions{width:100%}}
+
+/* Fix spacing between dynamic menu pages */
+#dynamicNav {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+#dynamicNav a {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@media (max-width: 790px) {
+  #dynamicNav {
+    width: 100%;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
