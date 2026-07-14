@@ -1,5 +1,6 @@
 (function(){
 "use strict";
+// Larbi Portfolio public client v3.5.0
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl=url=>{if(!url)return'#';try{const u=new URL(url,location.href);return['http:','https:','mailto:','tel:'].includes(u.protocol)?u.href:'#'}catch{return'#'}};
 const LOCAL_IMAGES={'sis-mini-factory':'assets/images/cabinet-open.jpg','plc-esp32-motor-control':'assets/images/motor-control.jpg','fruit-vegetable-recognition':'assets/images/fruit-recognition.jpg','solar-oven':'assets/images/solar-oven.svg'};
@@ -73,18 +74,90 @@ const FALLBACK={
   {id:'matlab-skill',groupId:'software',nameEn:'MATLAB / Simulink',nameFr:'MATLAB / Simulink',nameAr:'MATLAB / Simulink',visible:true,order:1},{id:'machine-expert',groupId:'software',nameEn:'Machine Expert Basic',nameFr:'Machine Expert Basic',nameAr:'Machine Expert Basic',visible:true,order:2},{id:'vijeo',groupId:'software',nameEn:'Vijeo Designer',nameFr:'Vijeo Designer',nameAr:'Vijeo Designer',visible:true,order:3},{id:'proteus-see',groupId:'software',nameEn:'Proteus / SEE Electrical',nameFr:'Proteus / SEE Electrical',nameAr:'Proteus / SEE Electrical',visible:true,order:4}
  ]
 };
-function usableArray(value,fallback){return Array.isArray(value)&&value.length?value:fallback}
-async function loadData(){const u=window.PORTFOLIO_CONFIG&&window.PORTFOLIO_CONFIG.apiUrl;if(!u)return FALLBACK;try{const d=await loadJsonp(u);if(!d||!d.ok)throw new Error('Invalid API response');return{settings:Object.assign({},FALLBACK.settings,d.settings||{}),profile:Object.assign({},FALLBACK.profile,d.profile||{}),projects:usableArray(d.projects,FALLBACK.projects),pages:usableArray(d.pages,FALLBACK.pages),sections:usableArray(d.sections,FALLBACK.sections),technologies:usableArray(d.technologies,FALLBACK.technologies),skillGroups:usableArray(d.skillGroups,FALLBACK.skillGroups),skills:usableArray(d.skills,FALLBACK.skills)}}catch(e){console.warn('Portfolio API fallback:',e);return FALLBACK}}
+const LIVE_DATA_CACHE_KEY='larbi_portfolio_last_live_data_v3_5';
+
+function arrayFromApi(value,fallback){
+  return Array.isArray(value)?value:fallback;
+}
+
+function normalizeApiData(d){
+  return{
+    settings:Object.assign({},FALLBACK.settings,d.settings||{}),
+    profile:Object.assign({},FALLBACK.profile,d.profile||{}),
+    projects:arrayFromApi(d.projects,FALLBACK.projects),
+    pages:arrayFromApi(d.pages,FALLBACK.pages),
+    sections:arrayFromApi(d.sections,FALLBACK.sections),
+    technologies:arrayFromApi(d.technologies,FALLBACK.technologies),
+    skillGroups:arrayFromApi(d.skillGroups,FALLBACK.skillGroups),
+    skills:arrayFromApi(d.skills,FALLBACK.skills),
+    generatedAt:d.generatedAt||'',
+    apiVersion:d.apiVersion||''
+  };
+}
+
+function readLastLiveData(){
+  try{
+    const raw=localStorage.getItem(LIVE_DATA_CACHE_KEY);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    return parsed&&parsed.data?parsed.data:null;
+  }catch(error){
+    return null;
+  }
+}
+
+function saveLastLiveData(data){
+  try{
+    localStorage.setItem(LIVE_DATA_CACHE_KEY,JSON.stringify({savedAt:Date.now(),data}));
+  }catch(error){}
+}
+
+function wait(ms){
+  return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+async function loadData(){
+  const url=window.PORTFOLIO_CONFIG&&window.PORTFOLIO_CONFIG.apiUrl;
+  if(!url)return FALLBACK;
+
+  let lastError=null;
+
+  for(let attempt=1;attempt<=2;attempt++){
+    try{
+      const response=await loadJsonp(url,attempt===1?30000:20000);
+      if(!response||!response.ok)throw new Error('Invalid API response');
+
+      const data=normalizeApiData(response);
+      saveLastLiveData(data);
+      document.documentElement.dataset.dataSource='live';
+      return data;
+    }catch(error){
+      lastError=error;
+      if(attempt===1)await wait(900);
+    }
+  }
+
+  const cached=readLastLiveData();
+  if(cached){
+    console.warn('Portfolio API unavailable; showing last synchronized data.',lastError);
+    document.documentElement.dataset.dataSource='local-cache';
+    return cached;
+  }
+
+  console.warn('Portfolio API unavailable; showing built-in fallback.',lastError);
+  document.documentElement.dataset.dataSource='fallback';
+  return FALLBACK;
+}
 function setLanguageDocument(){document.documentElement.lang=LANG;document.documentElement.dir=LANG==='ar'?'rtl':'ltr';const sel=document.getElementById('languageSelect');if(sel)sel.value=LANG}
 function applyTheme(s){if(s.accentColor)document.documentElement.style.setProperty('--primary',s.accentColor);if(s.accentColor2)document.documentElement.style.setProperty('--primary2',s.accentColor2);document.title=tr(s,'siteTitle')||'Larbi Portfolio';document.querySelectorAll('#brandText').forEach(x=>x.textContent=s.brandText||'Larbi Portfolio');document.querySelectorAll('#footerText').forEach(x=>x.textContent=tr(s,'footerText'));}
 function translateStatic(){const map={navHome:'home',navProjects:'projects',navSkills:'skills',navContact:'contact',projectsButton:'viewProjects',cvBtn:'downloadCV',adminLink:'admin',backHome:'backHome'};Object.keys(map).forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=t(map[id])});document.querySelectorAll('[data-loading]').forEach(e=>e.textContent=t('loading'));}
 function renderNav(pages){const html=pages.filter(p=>p.published!==false&&p.showInMenu!==false&&p.slug!=='contact').sort((a,b)=>(a.menuOrder||999)-(b.menuOrder||999)).map(p=>`<a href="page.html?slug=${encodeURIComponent(p.slug)}">${esc(tr(p,'menuTitle')||tr(p,'title'))}</a>`).join('');document.querySelectorAll('#dynamicNav').forEach(x=>x.innerHTML=html)}
 function parseLines(v){return String(v||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean)}function paragraphHtml(v){return parseLines(v).map(x=>`<p>${esc(x)}</p>`).join('')}
-function techHtml(items){return items.filter(x=>x.visible!==false).sort((a,b)=>(a.order||999)-(b.order||999)).map(x=>{const name=tr(x,'name'),sub=tr(x,'subtitle'),visual=x.logoUrl?`<img class="tech-logo" src="${esc(normalizeImageUrl(x.logoUrl))}" alt="${esc(name)}">`:`<span>${esc(x.symbol||name.slice(0,3))}</span>`;const inner=`<div class="tech-icon">${visual}</div><div><strong>${esc(name)}</strong><small>${esc(sub)}</small></div>`;return x.linkUrl?`<a class="tech-chip" href="${safeUrl(x.linkUrl)}" target="_blank">${inner}</a>`:`<div class="tech-chip">${inner}</div>`}).join('')}
+function techHtml(items){return items.filter(x=>x.visible!==false).sort((a,b)=>(a.order||999)-(b.order||999)).map(x=>{const name=tr(x,'name'),sub=tr(x,'subtitle'),fallback=esc(x.symbol||name.slice(0,3)||'•'),visual=x.logoUrl?`<img class="tech-logo" src="${esc(normalizeImageUrl(x.logoUrl))}" alt="${esc(name)}" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>${fallback}</span>`:`<span>${fallback}</span>`;const inner=`<div class="tech-icon">${visual}</div><div><strong>${esc(name)}</strong><small>${esc(sub)}</small></div>`;return x.linkUrl?`<a class="tech-chip" href="${safeUrl(x.linkUrl)}" target="_blank">${inner}</a>`:`<div class="tech-chip">${inner}</div>`}).join('')}
 function projectCard(p){const title=tr(p,'title'),category=tr(p,'category'),short=tr(p,'shortDescription');return`<a class="project-card" href="project.html?slug=${encodeURIComponent(p.slug||p.id)}"><div class="project-image"><img src="${esc(imageForProject(p))}" alt="${esc(title)}" onerror="this.src='${esc(LOCAL_IMAGES[p.slug||p.id]||'assets/images/solar-oven.svg')}'"></div><div class="project-body"><span class="project-category">${esc(category)}</span><h3>${esc(title)}</h3><p>${esc(short)}</p><div class="tags">${(p.tags||[]).slice(0,4).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></div></a>`}
 function typeLabel(type){const labels={projects:{en:'PROJECTS',fr:'PROJETS',ar:'المشاريع'},skills:{en:'SKILLS',fr:'COMPÉTENCES',ar:'المهارات'},cards:{en:'CARDS',fr:'CARTES',ar:'بطاقات'},rich:{en:'CONTENT',fr:'CONTENU',ar:'محتوى'},stats:{en:'STATS',fr:'STATISTIQUES',ar:'إحصائيات'},timeline:{en:'TIMELINE',fr:'PARCOURS',ar:'المسار'},gallery:{en:'GALLERY',fr:'GALERIE',ar:'معرض'},cta:{en:'CONTACT',fr:'CONTACT',ar:'تواصل'}};return(labels[type]&&labels[type][LANG])||t('section')}
 function sectionTitle(s){return`<div class="section-title"><span class="kicker">${esc(typeLabel(s.type))}</span><h2>${esc(tr(s,'title'))}</h2>${tr(s,'subtitle')?`<p>${esc(tr(s,'subtitle'))}</p>`:''}</div>`}
-function skillsHtml(groups,skills){return groups.filter(g=>g.visible!==false).sort((a,b)=>(a.order||999)-(b.order||999)).map(g=>{const items=skills.filter(s=>s.visible!==false&&s.groupId===g.id).sort((a,b)=>(a.order||999)-(b.order||999));const icon=g.iconUrl?`<img src="${esc(normalizeImageUrl(g.iconUrl))}" alt="">`:`<span>${esc(g.iconText||'•')}</span>`;return`<article class="skill-box"><div class="skill-title-row"><div class="skill-group-icon">${icon}</div><h3>${esc(tr(g,'title'))}</h3></div><ul>${items.map(s=>`<li>${s.iconUrl?`<img class="skill-item-icon" src="${esc(normalizeImageUrl(s.iconUrl))}" alt="">`:''}${esc(tr(s,'name'))}</li>`).join('')}</ul></article>`}).join('')}
+function skillsHtml(groups,skills){return groups.filter(g=>g.visible!==false).sort((a,b)=>(a.order||999)-(b.order||999)).map(g=>{const items=skills.filter(s=>s.visible!==false&&s.groupId===g.id).sort((a,b)=>(a.order||999)-(b.order||999));const fallback=esc(g.iconText||'•'),icon=g.iconUrl?`<img src="${esc(normalizeImageUrl(g.iconUrl))}" alt="" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>${fallback}</span>`:`<span>${fallback}</span>`;return`<article class="skill-box"><div class="skill-title-row"><div class="skill-group-icon">${icon}</div><h3>${esc(tr(g,'title'))}</h3></div><ul>${items.map(s=>`<li>${s.iconUrl?`<img class="skill-item-icon" src="${esc(normalizeImageUrl(s.iconUrl))}" alt="" onerror="this.remove()">`:''}${esc(tr(s,'name'))}</li>`).join('')}</ul></article>`}).join('')}
 function renderSection(s,d){const type=s.type||'rich',cls='section',sectionId=(s.pageSlug==='home'&&type==='cta')?'contact':(s.id||type);let body='';if(type==='projects'){const ps=d.projects.filter(p=>p.published!==false&&p.featured!==false).sort((a,b)=>(a.order||999)-(b.order||999));body=sectionTitle(s)+`<div class="projects-grid" id="projects">${ps.length?ps.map(projectCard).join(''):`<div class="empty-state">${t('noProjects')}</div>`}</div>`}else if(type==='skills'){body=sectionTitle(s)+`<div class="skills-grid" id="skills">${skillsHtml(d.skillGroups,d.skills)}</div>`}else if(type==='cards'){body=sectionTitle(s)+`<div class="cards-grid">${parseLines(tr(s,'itemsText')).map(l=>{const[a,b,img,url,tags]=l.split('|'),inner=`${img?`<img src="${esc(normalizeImageUrl(img))}" alt="">`:''}<h3>${esc(a||'')}</h3><p>${esc(b||'')}</p>${tags?`<div class="tags">${tags.split(';').map(x=>`<span class="tag">${esc(x.trim())}</span>`).join('')}</div>`:''}`;return url?`<a class="generic-card" href="${safeUrl(url)}">${inner}</a>`:`<article class="generic-card">${inner}</article>`}).join('')}</div>`}else if(type==='stats'){body=sectionTitle(s)+`<div class="stats-grid">${parseLines(tr(s,'itemsText')).map(l=>{const[n,a]=l.split('|');return`<div class="stat-card"><strong>${esc(n||'')}</strong><span>${esc(a||'')}</span></div>`}).join('')}</div>`}else if(type==='timeline'){body=sectionTitle(s)+`<div class="timeline">${parseLines(tr(s,'itemsText')).map(l=>{const[y,a,b]=l.split('|');return`<article class="timeline-item"><div class="timeline-year">${esc(y||'')}</div><div><h3>${esc(a||'')}</h3><p>${esc(b||'')}</p></div></article>`}).join('')}</div>`}else if(type==='gallery'){body=sectionTitle(s)+`<div class="gallery-grid">${parseLines(tr(s,'itemsText')).map(l=>{const[i,c]=l.split('|');return`<figure class="gallery-item"><img src="${esc(normalizeImageUrl(i))}" alt="${esc(c||'')}">${c?`<figcaption>${esc(c)}</figcaption>`:''}</figure>`}).join('')}</div>`}else if(type==='cta'){const u=s.buttonUrl==='mailto:'?'contact.html':safeUrl(s.buttonUrl);body=`<div class="cta"><div><h2>${esc(tr(s,'title'))}</h2><p>${esc(tr(s,'subtitle')||tr(s,'content'))}</p></div>${tr(s,'buttonLabel')?`<a class="btn btn-primary" href="${u}">${esc(tr(s,'buttonLabel'))}</a>`:''}</div>`}else{body=sectionTitle(s)+`<div class="rich-wrap">${paragraphHtml(tr(s,'content'))}${s.imageUrl?`<img src="${esc(normalizeImageUrl(s.imageUrl))}" alt="" style="border-radius:16px;margin-top:18px">`:''}</div>`}return`<section class="${cls}" id="${esc(sectionId)}"><div class="container">${body}</div></section>`}
 let PENDING_HASH=location.hash||'';
 function closeMobileMenu(){const n=document.getElementById('navLinks');if(n)n.classList.remove('open')}
