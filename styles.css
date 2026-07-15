@@ -393,3 +393,30 @@ html[dir="rtl"] .social-network-card small{
   .contact-form-grid label.full{grid-column:auto}
 }
 
+/* =========================================================
+   Portrait position fix v3.6
+   Moves the person upward, reduces empty space above the head,
+   and keeps a little more upper chest visible.
+   ========================================================= */
+.portrait-frame .portrait-inner img{
+  object-position:50% 33% !important;
+  transform:scale(1.47) !important;
+  transform-origin:50% 33% !important;
+}
+
+@media(max-width:790px){
+  .portrait-frame .portrait-inner img{
+    object-position:50% 35% !important;
+    transform:scale(1.50) !important;
+    transform-origin:50% 35% !important;
+  }
+}
+
+@media(max-width:540px){
+  .portrait-frame .portrait-inner img{
+    object-position:50% 35% !important;
+    transform:scale(1.50) !important;
+    transform-origin:50% 35% !important;
+  }
+}
+
